@@ -1,12 +1,11 @@
 
-import sys
 import sqlalchemy as sqla
 from flask import jsonify
 from flask_login import UserMixin
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import sessionmaker, scoped_session
-from sqlalchemy import exists, or_
+from sqlalchemy import or_
 from passlib.hash import pbkdf2_sha256
 import time, os
 from hashlib import md5
@@ -14,11 +13,7 @@ import checks
 
 
 conn = sqla.create_engine('mysql+pymysql://root:@127.0.0.1/project?host=127.0.0.1?port=3306')
-#conn = sqla.create_engine('mysql+mysqlconnector://root:mysqlSet33@127.0.0.1/project?host=127.0.0.1?port=3306', pool_recycle=3600)
-#conn = sqla.create_engine('mysql+mysqlconnector://root:mysqlSet33@127.0.0.1/project?host=127.0.0.1?port=3306')
-
 Session = scoped_session(sessionmaker(bind=conn))
-
 Base = declarative_base()
 
 
@@ -27,7 +22,8 @@ class Friend(Base):
     username1 = sqla.Column('username1', sqla.VARCHAR(64), sqla.ForeignKey("user.username"), primary_key=True)
     username2 = sqla.Column('username2', sqla.VARCHAR(64), sqla.ForeignKey("user.username"), primary_key=True)
 
-class User(Base,UserMixin):
+
+class User(Base, UserMixin):
     __tablename__ = 'user'
     username = sqla.Column('username', sqla.VARCHAR(64), primary_key=True)
     email = sqla.Column('email', sqla.VARCHAR(64))
@@ -36,10 +32,8 @@ class User(Base,UserMixin):
     password = sqla.Column('password', sqla.VARCHAR(64))
     country = sqla.Column('country', sqla.VARCHAR(64))
 
-
     def get_id(self):
         return self.username
-
 
     def avatar(self):
         digest = md5(self.email.lower().encode('utf-8')).hexdigest()
@@ -49,16 +43,19 @@ class User(Base,UserMixin):
     favorite = relationship('Favorite')
     events = relationship('Event')
 
+
 class Category(Base):
     __tablename__ = 'category'
     id = sqla.Column('id', sqla.Integer, primary_key=True, autoincrement=True)
     name = sqla.Column('name', sqla.VARCHAR(64))
     user = relationship('User', secondary="preference_user")
 
+
 class Preference_User(Base):
     __tablename__ = 'preference_user'
     category_id = sqla.Column('category.id', sqla.Integer, sqla.ForeignKey("category.id"), primary_key=True)
     user_username = sqla.Column('user.username', sqla.VARCHAR(64), sqla.ForeignKey("user.username"), primary_key=True)
+
 
 class Favorite(Base):
     __tablename__ = 'favorite'
@@ -67,6 +64,7 @@ class Favorite(Base):
     place_id = sqla.Column('place_id', sqla.VARCHAR(64))
     event_id = sqla.Column('event_id', sqla.Integer, sqla.ForeignKey('event.id'), sqla.ForeignKey("event.id"))
     type = sqla.Column('type', sqla.VARCHAR(10))
+
 
 class Event(Base):
     __tablename__ = 'event'
@@ -85,11 +83,13 @@ class Event(Base):
     lng = sqla.Column('lng', sqla.DECIMAL(10, 8))
     owner = sqla.Column('owner', sqla.VARCHAR(64), sqla.ForeignKey('user.username'))
 
+
 class Country(Base):
     __tablename__ = 'country'
     id = sqla.Column('id', sqla.Integer, primary_key=True, autoincrement=True)
     code = sqla.Column('code', sqla.VARCHAR(4), unique=True)
     name = sqla.Column('name', sqla.VARCHAR(64), unique=True)
+
 
 class Persister():
 
@@ -444,12 +444,6 @@ class Persister():
         db.close()
         return False
 
-
-    # def __init__(self):
-    #     print("test")
-        #Session = scoped_session(sessionmaker(bind=conn))
-        #Session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=conn))
-        #self.session = Session()
 
 Base.metadata.create_all(conn)
 
